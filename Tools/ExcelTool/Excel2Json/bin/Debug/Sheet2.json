@@ -1,0 +1,16 @@
+{
+  "BS002": {
+    "ID": "BS002",
+    "Name": "剑士",
+    "AssetName": "BS002",
+    "HP": 100,
+    "Attack": 15,
+    "Defence": 0,
+    "ActPoints": 5,
+    "ActSpeed": 1.5,
+    "Hit": 8,
+    "Dodge": 0,
+    "Critical": 8,
+    "Column11": null
+  }
+}
