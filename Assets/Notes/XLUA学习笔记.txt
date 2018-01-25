@@ -1,0 +1,122 @@
+2017年11月28日11:21:51 - 年底：
+    目标：熟悉xlua基本用法
+
+    string luaString = @"
+        a = 1;
+        b = '这是一个字符串';
+        c = false;
+        
+        d = {
+            f1 = 10,f2 = 20,
+            1, 2, 3,
+            add = function(self,a,b)
+                        print('变量d 的add 方法被调用');
+                        return a + b;
+            end          
+        }
+
+        function e()
+            print('e方法被调用');
+        end
+
+        function f(a,b)
+            print('f方法被调用：传入参数a为：' ,a,'b为：',b);
+            return 11111,{f1 = 1024;f3 = 1777;f2 = 15555};
+        end
+
+        function ret_e()
+            print('ret_e 方法被调用');
+        end                    
+    ";
+
+
+    1 lua相关函数assert：
+        assert() - lua中检测异常的参数
+        assert首先检查的是第一个参数是否返回错误，如果不返回错误，则assert简单返回，否则则以第二个参数抛出异常信息。 
+        assert()是普通函数，他首先计算两个参数，然后在调用函数，如：
+        n = io.read()
+        assert(tonumber(n), "invalid input:" .. n .. "is not a number")
+
+    
+    2 xlua中的无符号64为位支持：
+        uint64.tostring
+        描述：无符号数转字符串。
+        uint64.divide
+        描述：无符号数除法。
+        uint64.compare
+        描述：无符号比较，相对返回0，大于返回正数，小于返回负数。
+        uint64.remainder
+        描述：无符号数取模。
+        uint64.parse
+        描述：字符串转无符号数。
+
+
+    3 问题：
+        xlua中的例子6的lua脚本1中的：
+        return {
+            yield_return = util.async_to_sync(async_yield_return)
+        }
+        脚本2中的：
+            local yield_return = (require '脚本1').yield_return
+        
+        什么意思？
+
+    4 lua的时间函数os.time() 和os.date()
+        http://blog.csdn.net/u010130424/article/details/53321069
+        
+        - os.time() 得到是当前时间的距离1970.1.1.08:00时间的秒数
+            1 
+                不传参的话返回当前时间转化成秒数的结果
+                local time2 = os.time()   返回1479892620
+
+            2 
+                传参返回指定时间转化秒数的结果
+                local time = os.time({year =2016, month = 11, day =23, hour =17, min =17, sec = 00})
+                print(“====================time=,”,time)  -- 结果打印   1479892620
+
+        - os.date()把时间戳转化成可显示的时间字符串
+            print("===============os.date()==",os.date("%Y-%m-%d%H:%M:%S",1479892620))
+            输出结果：===============os.date()==   2016-11-23﹎17:17:00
+
+
+    5 xlua中的Hotfix标签的使用：
+        1 使用前需要在UNITY中添加HOTFIX_ENABLE宏，然后执行XLua/Generate Code，编辑器下执行XLua/Hotifix Inject Edittor
+        2 约束：            
+            不支持静态构造函数。
+            不支持在子类override函数通过base调用父类实现。
+            目前只支持Assets下代码的热补丁，不支持引擎，c#系统库的热补丁。
+
+    6  Lua使用范围：MMORPG中
+        1 我们做的时候有这么一个划分，凡是效率相关的(比如地图排序，寻路)，平滑显示相关的（比如人物移动，头顶血条位置）都用c#写。
+            凡是涉及到服务器通信，逻辑状态的，都在lua写
+
+        2 本来就是为了逻辑热更而做这套东西的。
+        有两种方式
+            1、某个系统完全用lua开发，那这lua代码下载新代码覆盖原来的就可以了。
+            2、平时用C#开发，打了Hotfix标签的C#类型出现问题后可以用lua来修复。
+
+
+    7   在lua脚本中通过xlua.private_accessible来直接访问事件对应的私有delegate的直接访问后，
+        可以通过对象的"&事件名"字段直接触发事件，例如self['&MyEvent']()，其中MyEvent是事件名。
+
+
+    8 Lua与c#的类型印射
+
+        基本数据类型
+            C#类型	                                                            Lua类型
+            sbyte，byte，short，ushort，int，uint，double，char，float	               number
+            decimal	                                                                 userdata
+            long，ulong	                                                            userdata/lua_Integer(lua53)
+            bytes[]	                                                                 string
+            bool	                                                                 boolean
+            string	                                                                 string
+
+        复杂数据类型
+            C#类型	                                                            Lua类型
+            LuaTable	                                                            table
+            LuaFunction	                                                            function
+            class或者 struct的实例	                                                userdata，table
+            method，delegate	                                                       function
+
+
+    

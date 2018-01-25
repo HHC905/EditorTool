@@ -1,0 +1,86 @@
+F4E7D6FF 背景颜色
+
+2 
+    private List<int> randomSeries = new List<int>();//随机序列 - 用来随机间单词打乱的一个序列
+    /// <summary>
+    /// 得到一个随机序列保存在RandomSeries数组中
+    /// </summary>
+    private void GetRandomSeries(int startIndex, int endIndex)
+    {
+        if (startIndex >= endIndex)
+            return;
+
+        int result = Random.Range(startIndex, endIndex);
+        randomSeries.Add(result);
+
+        GetRandomSeries(startIndex, result);
+        GetRandomSeries(result + 1, endIndex);
+    }
+
+3
+     unity3d协程方法停止不了 ！！！！
+            请注意只有StartCoroutine使用一个字符串方法名时才能用StopCoroutine停用之.
+
+4   public  string Replace（string oldValue，string newValue）{}
+        将指定字符串中所有出现oldValue的字符串替换程newValue，并且返回一个新的字符串
+        
+    public bool Contains (string value) 
+        返回一个值，该值指示指定的 String 对象是否出现在此字符串中。
+
+
+5 TMP_InputFiled组件：- 输入框
+    Line Type：控制text的行 -可以自动调整输入框的高度 - 多行
+        SingLine： - 自动扩长时，显示内容还是在最上面 - 不会变
+
+        MultiLineSubmit - 宽度不变，高度随着输入框的内容的增加而自动增大  这两者好像差不多~~2333
+        MulitLineNewLine：自动扩长时，显示内容会一直跟着光标走
+
+
+
+6     /// <summary>
+    /// 随机打乱一个数组
+    /// </summary>
+    private static void RandomSortList<T>(ref List<T> list)
+    {
+        List<int> randomSeries = new List<int>();//随机序列 - 用来随机间单词打乱的一个序列
+        GetRandomSeries(randomSeries, 0, list.Count);
+        List<T> temp = new List<T>();
+        for (int i = 0; i < list.Count; ++i) 
+        {
+            temp.Add(list[randomSeries[i]]);
+        }
+        list = temp;
+        temp = null;
+    }
+
+
+    /// <summary>
+    /// 得到一个随机序列保存在RandomSeries数组中
+    /// </summary>
+    private static void GetRandomSeries(List<int> randomSeries, int startIndex, int endIndex)
+    {
+        if (startIndex >= endIndex)
+            return;
+
+        int result = Random.Range(startIndex, endIndex);
+        randomSeries.Add(result);
+
+        GetRandomSeries(randomSeries, startIndex, result);
+        GetRandomSeries(randomSeries, result + 1, endIndex);
+    }
+
+
+2017年9月27日20:12:42
+添加作业游戏 - 单句模型：529 ，531，532,533,535,538
+
+2017年10月19日20:55:56问题：
+    空格对比错误！未修正！！！！！！！！！！！TODO
+
+随机点名
+
+puhanda提供计算服务
+普汉达提供计算服务
+3E3E3EFF
+
+
+UIDayAnswerScoreItem(Clone)

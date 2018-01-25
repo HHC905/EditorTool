@@ -1,0 +1,110 @@
+2017年12月1日18:43:37 星期五未解决问题：
+    1 2_4_2_1 小车游戏 配置的2_4_2_1_2Tshirt有问题 已修改
+    2 长问答句找不到游戏模型配 解决
+
+2_5_1	2_5_1_1/2_5_1_2/2_5_1_3/2_5_1_4/2_5_1_5/2_5_1_6	日常活动	Things to Do	Actions		2	906
+2_5_2	2_5_2_1/2_5_2_2/2_5_2_3/2_5_2_4/2_5_2_5/2_5_2_6	精彩活动	Things to Do	Actions		2	907
+2_5_4	2_5_4_1/2_5_4_2/2_5_4_3/2_5_4_4/2_5_4_5	各种活动	Things to Do	Activities	Art	2	908
+2_6_1	2_6_1_1/2_6_1_2/2_6_1_3/2_6_1_4/2_6_1_5/2_6_1_6	各种家具	Home	Things at home		2	951
+2_6_2	2_6_2_1/2_6_2_2/2_6_2_3/2_6_2_4/2_6_2_5/2_6_2_6	各式各样的房间	Home	Rooms		2	824
+2_6_4	2_6_4_1/2_6_4_2/2_6_4_3/2_6_4_4/2_6_4_5	数字大师	Home	Numbers	Math	2	825
+
+
+
+单词图片缺少部分：
+    L2-U6-Lesson1: 单词 bookshelf图片缺少  2_6_1_1_2
+    L2-U6-Lession4:单词没有
+
+问句单句图片缺少部分：
+    L2-U5-Lesson1 问句部分
+    L2-U5-Lesson2 问句部分
+
+
+What are you doing?
+I am playing.I'm not sleeping.
+I'm playing now.
+What are they doing?
+They are eating.They aren't drinking.
+They're eating now.
+
+
+Are there beds in the bedroom?
+Yes,there are.
+Are there chairs in the kitchen?
+Yes,there are.
+Are there bookshelves in the living room?
+Yes,there are.
+Are there bikes in the bedroom?
+No,there aren't.
+Are there sofas in the kitchen?
+No,there aren't.
+Are there beds in the living room?
+No,there aren't.
+
+When do you eat breakfast?
+I eat breakfast at 7:15.
+I like eggs and juice.
+When do you eat lunch?
+I eat lunch at 1:00.
+I like soup and salad.
+When do you eat dinner?
+I eat dinner at 6:45.
+French fries and spaghetti!
+
+Sunday,Monday,Tuesday,Wednesday,
+Thursday,Friday,Saturday
+He goes to karate class on Mondays.
+He goes to swimming class on Tuesdays.
+She goes to dance class on Wednesdays.
+She goes to English class on Thursdays.
+
+
+Y 57
+H 176
+
+有声计划
+组队学习伙伴:
+
+
+
+
+
+
+"1_8_2_1_2"
+t
+
+
+
+2017年12月7日18:52:37 星期四 工作：
+    1 家长控制中修改公众号的名字为瓶子树
+    2 商城中的数量需要重新计算
+
+
+
+182fbfa6336a4cec72f7e0444c561d609abed05f.ab
+
+
+
+
+    public static string GetSpriteId(string word) 
+    {
+        foreach (var v in ConfigManager.Get<ConfigSongSourceModel>()) 
+        {
+            if (v.word == word) 
+            {
+                return v.sprite;//返回单词的id
+            }
+        }
+        return null;
+    }
+
+
+
+
+2017年12月15日10:47:15 测试问题：
+    1. 购买钥匙支付成功，后钥匙数量没有增加
+
+
+
+【待处理项目！！！！】
+2017年12月25日16:40:03 波力英语 有声计划周天访问数据越界！！！！！！！找个时间处理

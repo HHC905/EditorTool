@@ -1,0 +1,763 @@
+    1 TMPro插件：
+        TextMeshProUGUI 脚本：代替UGUI的Text，SetText设置text的值
+        TMP_Text？？
+
+
+    2 UnityEngine.EventSystems
+        在需要监听UGUI事件的物体上，挂载UGUIEventListener脚本，同时再挂载需要监听的事件对应的脚本，如：
+             
+             - 单击事件： 在button按钮上挂载UGUIEventOnPointerClick单击事件脚本，然后在代码中通过
+                        UGUIEventListener.Get(button游戏物体/或者该button上的任意一个组件).onPointerClick = AudioButtonClick;
+                        
+                        //所要执行的单击事件 - 参数是PointerEventData类型
+                        private void AudioButtonClick(UnityEngine.EventSystems.PointerEventData arg0);
+
+
+                        PointerEventData类：与指针（鼠标/触摸）事件相关联的事件参数类
+                            如变量中有positon，可以表示当前事件的点击位置
+                            
+
+
+
+
+
+    3 UnityEngine.RuntimeInitializeOnLoadMethodAttribute
+        允许运行时类方法在运行时加载游戏时被初始化，而不需要用户的操作。
+        标记[RuntimeInitializeOnLoadMethod]的方法在游戏加载后被调用。这是在Awake方法被调用之后。
+        public class Main : MonoBehaviour {
+
+                [UnityEngine.RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+                public static void GameMain() //该方法会在整个的场景加载前运行该静态方法
+                {
+                     Debug.Log("Main static function is Start on sceneLoad");
+                }
+
+                RuntimeInitializeLoadType.AfterSceneLoad 是在场景加载完毕后运行该静态方法
+                但是：该静态方法一定是在该场景上任意一个脚本的Awake之前运行的！即该方法是游戏运行时第一个执行的方法，且不用挂载！！！！！
+        }
+
+
+
+
+    4 UnityEngine.SceneManagement.SceneManager 运行时的场景管理 - 系统的
+            - Scene currentScene = SceneManager.GetActiveScene();//获取当前活动的场景
+
+           
+    5 UnityEngine.SceneManagement.Scene 场景类
+        Scene.name 场景名称
+
+    6 DG.Tweening.Tweener DoTweening动画
+            using DG.Tweening;
+            void Start () 
+            {
+                //让TimeScale = 0
+                Time.timeScale = 0;
+        
+                Image image = transform.Find("Image").GetComponent<Image>();
+                //调用DOmove方法来让图片移动
+                Tweener tweener = image.rectTransform.DOMove(Vector3.zero,1f);
+                //设置这个Tween不受Time.scale影响
+                tweener.SetUpdate(true);
+                //设置移动类型
+                tweener.SetEase(Ease.Linear);
+                tweener.OnComplete = delegate() {
+                    Debug.Log("移动完毕事件");
+                };
+                image.material.DOFade(0,1f).OnComplete = delegate() {
+                    Debug.Log("褪色完毕事件");
+                };
+            }
+            DoTween.To()方法，对一个变量做一个动画，通过插值的方式修改一个值的变化 !!!!!!!!!!!!!!
+                public Vector3 myValue = new Vector3(0, 0, 0);
+                void Start()
+                {
+                    //对变量做一个动画，通过插值的方式去修改一个值的变化
+                    DOTween.To(() => myValue, x => myValue = x, new Vector3(10, 0, 0), 2);//用两秒的时间从0,0,0变化到10,10,10
+                    //()=> myValue,表示起始值为myValue,x=>myValue=x,表示将系统计算好的x值(当前值到目标值的插值)赋给myValue,
+                    //new Vector3(10,0,0),表示达到的目标值，2表示所需时间
+
+                }
+
+
+            2 DOMoveX()、DOMoveY()、DOMoveZ()
+                    如果只是让物体的单个坐标移动，可直接用DOMoveX()、DOMoveY()、DOMoveZ()方法控制移动动画,参数为(目标位置，所需时间)
+                    - transform.DOMoveX(5, 1); 
+
+              DOLocalMoveX()、DOLocalMoveY()、DOLocalMoveZ()表示局部坐标的位移移动画法
+                    - transform.DOLocalMoveX(0,2f);
+
+            3 FromTween:表示让物体从目标位置移动到当前位置，即等同于播放反向的移动动画                
+                DoTween中任何调用动画的方法后面都可以添加From(),表示从目标位置移动到当前位置
+                    - From() 
+                        transform.DoMoveX(5,1).From();//表示让物体在1s内，从x坐标为5的位置移动到当前坐标位置
+                    - From(true)
+                        transform.DoMoveX(5,1).From(true);//表示让物体在1s内，从x坐标为（当前坐标x值+5）的位置移动到当前坐标位置
+
+            4 SetEase() - 设置动画的曲线
+                1) Ease.INBack() - 表示物体先向后一点，再向前播放
+                    - tweener.SetEase(Ease.INBack);
+                2) Ease.InBounce() - 表示物体相当于一个蓄力进入的效果
+                    - tweener.SetEase(Ease.InBounce);
+                3) Ease.OutBounce() - 相当于一个落地之后的弹跳效果
+            
+            5 SetLoops() - 设置动画的循环次数
+                - tweener.SetLoops(2);//表示动画的循环次数
+            
+            6 OnComplete()  -表示动画的事件函数，当前动画播放完成后的回调方法
+                - tweener.OnComplete(OnClick);
+                void OnClick(){//···}
+            
+            7 DoText() - 表示动画的对话框文字动画，该方法用来显示打字机的效果
+                Text text = GetComponent<Text>();
+                text.DoText("轰隆隆……\n大地在颤抖，\n这是哪里？\n为什么我的头会这么痛……\n……谁来救救我……",10);//表示在10s内显示参数内文字（打字机效果）
+            
+            8 DOShakePosition() 屏幕震动效果，原理是让摄像机进行随机方向的位移，产生震动的假象
+                - transform.DOShakePosition(0.8f);//表示震动时间是0.8s，震动方向随机
+                - transform.DOShakePosition(0.8f,new Vector3(1,1,0));//表示震动时间为0.8s，震动方向为x和y方向，震动强度为1
+            
+            9 DOColor()、DOFade() - 颜色渐变和透明度渐变动画
+                Text text = GetComponent<Text>();
+                text.DoText("轰隆隆……\n大地在颤抖，\n这是哪里？\n为什么我的头会这么痛……\n……谁来救救我……",10);//表示在10s内显示参数内文字（打字机效果）
+                - text.DOColor(Color.blue,1f);//颜色渐变动画
+                - test.DOFade(1,5);//参数：透明度，渐变时间，其中0为不透明，1位完全透明
+            
+            10 DoTweenAnimation组件（脚本） - DoTween插件的可视化操作
+                面板参数：
+                    AutoPlay - 自动播放
+                    AutoKill - 自动销毁
+                    Duration - 动画时常
+                    Delay - 延迟时间
+                    Ignore TimeScale - 忽视timescale时间的控制
+                    Loops - 循环的次数
+                    TO(Vector3) - 目标的位置
+                    Snapping - 强烈的，猛烈的
+                    Relative - 相对的
+                    Events - 触发事件
+                
+                在脚本中控制DoTweenAnimation动画脚本的播放：
+                    - 前提：脚本挂在面板上，并且取消AutoPlay和AutoKill
+                     tweenAnimation = GetComponent<DOTweenAnimation>();
+                     tweenAnimation.DOPlayForward();//向前播放动画
+                     tweenAnimation.DOPlayBackwards();//向后播放动画（回滚动画）
+
+            
+            11 DoTweenPath路径编辑器
+                面板参数：
+                    Shift+Ctrl:添加路径点
+                    Shift+Alt:移除路径点
+                    AutoPlay：自动播放动画
+                    AudoKill：自动删除动画
+                    Duration:动画时长
+                    Delay:动画延时（即自启动动画播放后到开始播放的延迟时间）
+                    Ease：动画曲线
+                         - Linear:匀速
+                    Loop:动画的循环次数
+                        - -1表示死循环！！！！
+                    LoopType：循环模式
+                        - Restart：重新启动，表示走完路径后从开始重新走
+                        - Yoyo：悠悠球，从开始走到结尾，再从结尾走到开始
+                        - Incremental:增量模式
+                    PathType:路径模式
+                        - CatmullRom：曲线
+                        - Linear:直线
+                    ClosePath:封闭路径，表示使路径首尾相连
+                    LocalMovement：是否是本地坐标
+                    Orientation：运动朝向
+                        - ToPath：朝向路径方向
+                        - Look At Transform：朝向一个目标物体
+                        - Look At Position：朝向一个目标位置
+                    Relative:相对的，表示路径跟随物体移动
+                    Show Indexs:是否显示索引
+
+            12 添加按钮控制动画的播放
+              - 在场景中添加Button，并且将Cube拖进Button的OnClick事件方法中选择DOTweenPath的DOTogglePause方法，
+              - 实现当点击按钮后开始播放动画，再次点击时会停止播放(前提：将DOTweenPath组件的AutoPaly和AutoKill选项取消选择)
+                               
+                
+    7 
+        Screen.Height 和Screen.Weight是游戏分辨率的大小！！！！！
+        WorldCamera.pixelWidth和WorldCamera.pixelHeight还是游戏分辨率的大小！！！！
+
+        如何得到相机的那个视口分辨率？？？
+            即游戏场景中的可视区域的大小怎么得到？是不是不用考虑分辨率的大小？而是只考虑这个可视范围的大小
+
+    8
+        Object类实例方法：
+            GetInstanceID方法：Object对象ID
+             基本语法 public int GetInstanceID();
+            功能说明 此方法用来返回Object对象的实例化ID。说明如下：
+            1.每个Object对象的实例、Object子类的实例如GameObject、Component等以及Object子类的子类实例如Transform、RigidBody等再工程中都有唯一的ID(int类型)。
+                并且从程序开始运行到结束，除非对象销毁，否则实例对应的ID都不会改变。
+            2. 从GameObject.CreatePrimitive()或Object.Instantiate()中创建或克隆的每个名字相同的GameObject对象都有唯一的ID，即虽然名字相同，但ID却是不同的。
+                在游戏开发中有时需要克隆大量的物体，而每个物体的生命周期需要单独记录，此时这两种方法很有用。
+
+    9
+        UI.Selectable.interactable = true;//表示按钮可以使用
+
+
+
+    10      
+        Vector2 pointPosition = Camera.main.WorldToScreenPoint(Line.position);//世界坐标转屏幕坐标
+        _camera.ScreenToWorldPoint(dianV);  //屏幕坐标转成世界坐标
+
+
+    11 Unity 2D两种常用判断点击的方法
+        1.Raycast法
+             RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);             
+             if(hit.collider != null)
+             { 
+             　　Debug.Log ("Target Position: " + hit.collider.gameObject.transform.position);
+             　　//and do what you want
+             }
+
+        2.Overlap法
+        Collider2D[] col = Physics2D.OverlapPointAll(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+        
+        if(col.Length > 0)
+        {
+            foreach(Collider2D c in col)
+            {
+                //do what you want
+            }
+        }
+
+    12 
+        public static bool ScreenPointToWorldPointInRectangle(RectTransform rect, Vector2 screenPoint, Camera cam, Vector3 worldPoint);
+            
+            ScreenPointToLocalPointInRectangle	将屏幕空间点转换为矩形平面上的RectTransform的局部空间中的位置。
+            ScreenPointToWorldPointInRectangle	将屏幕空间点转换为位于给定RectTransform平面上的世界空间中的位置。
+                //判断鼠标是否碰到了物体
+                if (CheckMouseToTarget(out targetItem)) 
+                {
+                    //碰到了
+                    Vector2 targetPointPositon = targetItem.GetImageItemPointPositon;//获得目标圈的屏幕位置
+                    
+                // RectTransformUtility.ScreenPointToLocalPointInRectangle(mainCancas.transform as RectTransform, pointPosition, mainCamea, out pointPositon2);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(mainCancas.transform as RectTransform, targetPointPositon, mainCamea, out targetPointPositon);
+
+                // float dis = Vector2.Distance(targetPointPositon, pointPosition);
+                    float dis = Vector2.Distance(targetPointPositon, pointPositon2);//必须将屏幕坐标转换为相同画布下的坐标计算的距离才是对的
+                    Debug.Log(dis);
+                    Line.up = pointPositon2 - targetPointPositon;//设置连线方向
+                    Line.sizeDelta = new Vector2(Line.sizeDelta.x,dis);//设置连线长度
+                }
+
+    13 UGUI 的Grid排序~~~
+
+    14 Git 外部比较工具 : Beyond Compare!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    15 SpritesLoad.LoadAtlas(AtlasName.UICommon, MyClassModel.icon);加载任意图集下的图片
+
+    16  
+        （随机数不能取该上界值）
+        1.random.Next() --------------返回非负的一个随机数
+        2.random.Next(MaxValue)----------返回一个小于所指定最大值的非负随机数
+        3.Random.Next(minValue , maxValue ) 返回一个指定范围内的随机数。
+
+
+    17 HashSet<T> 集合类
+        这个集合类包含不重复项的无序列表。这种集合称为“集(set)”。集是一个保留字，所以该类有另一个名称HashSet<T>。
+        这个名称很容易理解，因为这个集合基于散列值，插入元素的操作非常快，不需要像List<T>类那样重排集合。
+        http://www.cnblogs.com/xiaopin/archive/2011/01/08/1930540.html
+
+
+    18 
+        JsonUtility:Json解析器
+             
+            1    public static T FromJson(string json);//将json格式的字符串解析成一个T类型的类或者结构体
+            
+                 例子如下：
+                    [System.Serializable]
+                    public class PlayerInfo
+                    {
+                        public string name;
+                        public int lives;
+                        public float health;
+                    }
+
+                    public static PlayerInfo CreateFromJSON(string jsonString)
+                    {
+                        return JsonUtility.FromJson<PlayerInfo>(jsonString);
+                    }
+
+                    给定的json字符串必须如下：
+                     {"name":"Dr Charles","lives":3,"health":0.8}
+
+            2   public static void FromJsonOverwrite（string json，object objectToOverwrite）;
+                此方法与JsonUtility.FromJson非常相似，只是不用创建一个新对象并将JSON数据加载到该对象中，它将JSON数据加载到现有对象中。
+                这允许您更新存储在类或对象中的值，而无需任何分配。    
+
+    19 bool string.StartWith(string,System.StringComparison);//比较两个字符串前面是否相似
+
+    20 Color color = new Color(0.8f,0.8f,0.8f,1);//四位数分别是RGBA
+        Color.white = new Color(1,1,1,1);//纯白
+        Color.blank = new Color(0,0,0,1);//纯黑  
+    
+        注意 A：Alpha的色彩空间，也就是透明度/不透明度
+    
+    21 LineRenderer 学习（空物体挂载LineRenderer组件）
+        LineRenderer.SetWidth(0.1,0.1) ; 设置线段起始点与结束点的宽度 （参数1 为起始点 参数2为结束点）
+        LineRenderer.SetColor(Color.black,Color.white); 设置线段起始点与结束点的颜色 （参数1 为起始点颜色 参数2为结束点颜色）
+        LineRenderer.SetVertexCount(5); 设置线段数量。
+        LineRenderer.useWorldSpace = true; 是否使用世界坐标系，和上面编辑器对应。
+
+         void Update() 
+         {           
+            //在游戏更新中去设置点  
+            //根据点将这个曲线链接起来  
+            //第一个参数为 点的ID   
+            //第二个 参数为点的3D坐标  
+            //ID 一样的话就标明是一条线段  
+            //所以盆友们须要注意一下！  
+            
+            lineRenderer.SetPosition (0, v0);  //vo，v1,v2,v3是该条线段的起点
+            lineRenderer.SetPosition (1, v1);  
+            lineRenderer.SetPosition (2, v2);  
+            lineRenderer.SetPosition (3, v3);  
+        }  
+
+    22 Rigidbody2d 2d刚体
+        GravityScale：重力的作用大小 - 0 表示取消重力
+        
+
+    23 RectTransform 笔记
+        1.改变RectTransform的top
+            GetComponent<RectTransform>().offsetMax = new Vector2(GetComponent<RectTransform>().offsetMax.x, top);
+        2.改变RectTransform的bottom
+            GetComponent<RectTransform>().offsetMin = new Vector2(GetComponent<RectTransform>().offsetMin.x, bottom);
+        3.改变RectTransform的width，height
+            GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
+        4.改变RectTransform的pos
+            GetComponent<RectTransform>().anchoredPosition3D = new Vector3(posx,posy,posz);
+            GetComponent<RectTransform>().anchoredPosition = new Vector2(posx,posy);
+
+        5 RectTransform 的position和localPositon与面板上显示的是不一样的！！！！
+            RectTransform面板上显示的是anchoredPosition！！！！！！注意！！！！
+            transform是没有锚点之分的，所有一个是相对父节点的坐标，一个是世界坐标,而RectTrasform面板上的坐标是相对于锚点的坐标！！！！
+            ！！！！
+
+    24 
+    常用平台宏定义：
+        UNITY_EDITOR；UNITY_EDITOR_WIN；UNITY_IOS；UNITY_ANDROID
+    版本定义：
+        UNITY_X_Y_Z（UNITY_5_0_1）
+        http://blog.csdn.net/oskytonight/article/details/40111401
+
+    25
+        2d 碰撞器与触发器
+                Collider2D.OnCollisionEnter2D(Collision2D) 当进入2D碰撞
+                Collider2D.OnCollisionStay2D(Collision2D)
+                Collider2D.OnCollisionExit2D(Collision2D) 当退出2D碰撞
+
+                Collider2D.OnTriggerEnter2D(Collider2D) 当进入2D触发器
+                Collider2D.OnTriggerStay2D(Collider2D) 当停留在2D触发器
+                Collider2D.OnTriggerExit2D(Collider2D) 当退出2D触发器
+
+    26 Aspect Ratio Fitter:组件（ugui布局调节组件）
+            Aspect Mode：AspectMode枚举类型
+            public enum AspectMode 
+            {                     
+                //不使用适合的纵横比
+                None,
+
+                //让Height随着Width自动调节
+                WidthControlsHeight,
+
+                //让Width随着Height自动调节
+                HeightControlsWidth,
+
+                //宽度、高度、位置和锚点都会被自动调整，以使得该矩形拟合父物体的矩形内，同时保持宽高比例
+                FitInParent,
+
+                //宽度、高度、位置和锚点都会被自动调整，以使得该矩形覆盖父物体的整个区域，同时保持宽高比
+                EnvelopeParent
+            }
+            Aspect Ratio：宽高比例，width/height 1.778151 注意：1920/1080 = 1.777777778
+
+
+    27 UGUI 中让背景适应文字大小方法：
+        1 背景作为父物体，文字框作为子物体
+        2 背景父物体添加Horizontal Layout Group组件，与ContentSizeFitter组件
+        3 Horizontal Layout Group:
+            Horizontal Layout Group是HorizontalOrVerticalLayoutGroup的子类，HorizontalOrVerticalLayoutGroup又是LayoutGroup的子类
+                1 中的Pading是子物体与父物体两边的间隔距离
+                2 Space是背景父物体下下的子物体的间距
+                3 Child Alignment：是子物体的对齐方式 
+                4 Control Child Size:勾选了width和height后，父物体的大小会跟着子物体的大小变化而变化
+                5 Chlid Force Expand：勾选的width和height后，父物体的大小不会跟着子物体变，而是子物体自己强行扩大
+        4 Content Size Fitter:自动计算宽度高度的组件
+            Unconstrained:不执行任何调整
+            MinSize：调整内容的最小大小
+            PreferredSize：调整内容的首选大小，也就是会自动根据内容来调整大小
+                    
+
+    28
+    UGUI之布局的使用：http://www.cnblogs.com/nsky/p/4854002.html
+            unity的LayoutGroup分为三种，
+                Horizontal Layout Group（水平布局）：对象填充总个父物体，水平会填充
+                Vertical Layout Group（垂直布局）：垂直（高度）会填充
+                Grid Layout Group （网格布局）：以表格的形式布局，不会填充父物体
+
+
+
+    29
+     UGUI:Canvas控件之CanvansGroup控件：
+        基本介绍：
+            该组件可以用来控制一些不需要个别控制的UI元素的某些方面，CanvasGroup的属性会影响到他所有的子物体
+        组件属性介绍：
+            1 - Alpha：透明度
+            2 - Interactable:确认该组件是否接受输入，当他被设置为false时，交互技能将被禁用
+            3 - Block Raycasts:是否让该组件像collider一样接受射线检测？你需要在依赖于Canvas的图形射线检测者上唤醒射线检测的方法
+                注意！！！！此项不会作用于Physic.Raycast
+            4 - Ignore Parent Group:是否影响父级group的方法
+        经典使用：
+            1 添加CanvasGroup,通过控制它的alpha来淡入淡出
+            2 通过给父级gameobject添加一个canvasgroup并设置它的interactable为false来制作一整套没有交互的控制
+            3 通过将元素或者元素的一个父级添加CanvasGroup并设置BlockRaycasts值为false来制作一个或多个不阻止鼠标事件的UI元素
+
+
+
+30.
+    png图片：未压缩格式的图片 - 文件较大，一般为小图，精度高
+    jpg图片：压缩格式的图片
+
+
+
+31 . Json类一定要记得加上[System.Serializable]序列化！！！！这是json文件解析时序列化与反序列化的前提条件！！！！
+    Unity Serializable 可以序列化一个类,使这个被序列化的对象在Inspector面板上显示, 并可以赋予相应的值
+
+
+
+32 
+    /// <summary>
+    /// 判断输入的字符串是否是一个合法的手机号
+    /// </summary>
+    public static bool IsMobilePhone(string input)
+    {
+        Regex regex = new Regex("^13\\d{9}$");
+        return regex.IsMatch(input);
+    }
+    
+    /// <summary>
+    /// 判断输入的字符串是否只包含数字和英文字母
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public static bool IsNumAndEnCh(string input)
+    {
+        string pattern = @"^[A-Za-z0-9]+$";
+        Regex regex = new Regex(pattern);
+        return regex.IsMatch(input);
+    }
+
+34.
+    partial 关键字 - 局部类型：局部类型允许我们将一个类、结构或接口分成几个部分，分别实现在几个不同的.cs文件中：
+        局部类型是一个纯语言层的编译处理，不影响任何执行机制——事实上C#编译器在编译的时候仍会将各个部分的局部类型合并成一个完整的类。
+        public partial class ServerInfo{}
+        public partial class ServerInfo{}
+
+        使得ServerInfo类可以在不同的地方定义，
+
+
+
+35.
+    番茄助手 - shift+alt+s 查找代码
+
+    
+
+36
+    【C#】时间日期格式转换：long和DateTime相互转换
+    http://blog.csdn.net/qq_18995513/article/details/68921933
+    // DateTime --> long
+    public static long ConvertDataTimeToLong(DateTime dt)
+    {
+        DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+        TimeSpan toNow = dt.Subtract(dtStart);
+        long timeStamp = toNow.Ticks;
+        timeStamp = long.Parse(timeStamp.ToString().Substring(0, timeStamp.ToString().Length - 4));
+        return timeStamp;
+    }
+
+    // long --> DateTime
+    public static DateTime ConvertLongToDateTime(long d)
+    {
+        DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+        long lTime = long.Parse(d + "0000");
+        TimeSpan toNow = new TimeSpan(lTime);
+        DateTime dtResult = dtStart.Add(toNow);
+        return dtResult;
+    }
+
+    //方法二：long -》DateTime
+    public static DateTime GetLocalTimeFromSecond(long time)
+    {
+        long ecpo = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).ToUniversalTime().Ticks;
+        long ms = 10000000;
+        return new DateTime(time * ms + ecpo).ToLocalTime();
+    }
+
+
+37：
+    /// <summary>
+    /// 得到本周第一天(以星期一为第一天)
+    /// </summary>
+    public DateTime GetWeekFirstDayMon(DateTime datetime)
+    {
+        //星期一为第一天
+        int weeknow = Convert.ToInt32(datetime.DayOfWeek);
+
+        //因为是以星期一为第一天，所以要判断weeknow等于0时，要向前推6天。
+        weeknow = (weeknow == 0 ? (7 - 1) : (weeknow - 1));
+        int daydiff = (-1) * weeknow;
+
+        //本周第一天
+        string FirstDay = datetime.AddDays(daydiff).ToString("yyyy-MM-dd");
+        return Convert.ToDateTime(FirstDay);
+    }
+
+38: 下载本地音频并播放：（网络音频直接填写网络音频的url就可以）
+        WWW www = new WWW("file:///" + filePath);
+        yield return www;
+        if (string.IsNullOrEmpty(www.error))
+        {
+            var audio = www.GetAudioClipCompressed();
+            AudioManager.Instance.Play(audio);
+            yield return new WaitForSeconds(audio.length);
+            if (complete != null)
+                complete();
+        }
+
+
+39: 对字典建进行排序：
+    using System.Linq;
+    方法1：
+        static void Main123()
+        {
+            Dictionary<string, int> dt = new Dictionary<string, int>();
+            dt.Add("美丽", 2);
+            dt.Add("校园", 1);
+            dt.Add("大学", 3);
+
+            Debuger.Log("-------------------------------------");
+            //对字典进行遍历
+            var result1 = from pair in dt select pair;
+            foreach (KeyValuePair<string, int> pair in result1)
+            {
+                Debuger.Log(pair.Key.ToString() + " " + pair.Value.ToString());
+            }
+            Debuger.Log("-------------------------------------");
+
+            //对字典进行升序排序 - 按照字典的value值
+            var result2 = from pair in dt orderby pair.Value select pair;
+            foreach (KeyValuePair<string, int> pair in result2)
+            {
+                Debuger.Log(pair.Key.ToString() + " " + pair.Value.ToString());
+            }
+
+            Debuger.Log("-------------------------------------");
+            //对字典进行降序排序 - 按照字典的value值
+            var result3 = from pair in dt orderby pair.Value descending select pair;
+            foreach (KeyValuePair<string, int> pair in result3)
+            {
+                Debuger.Log(pair.Key.ToString() + " " + pair.Value.ToString());
+            }
+            Debuger.Log("------------------------------------------------");
+            //对字典进行赋值
+            dt = result3.ToDictionary(s => s.Key, y => y.Value);
+            foreach (var v in dt)
+            {
+                Debuger.Log(v.Value);
+            }
+        }
+    方法2：
+            using System.Linq;
+            //对数据字典进行按日期排序  - 升序（按照key的值）
+            allDayData = allDayData.OrderBy(s => s.Key).ToDictionary(s => s.Key, p => p.Value);
+
+            //对数据字典进行按日期排序  - 降序（按照value的值）
+            allDayData = allDayData.OrderByDescending (s => s.Value).ToDictionary(s => s.Key, p => p.Value);
+
+ 40 Unity指定路径加载资源 - 返回在指定位置assetPath下第一个类型是type的资源对象。
+
+    注意：参数assetPaht不需要区分大小写。在Unity中所有的资源名称和路径都需要斜杠/。所有的路径都是相对于工程目录文件. 
+    例如” Assets/MyTextures/hello.png”
+
+    GameObject go = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+
+ 41：删除文件夹下的所有文件
+            if (System.IO.Directory.Exists(Application.persistentDataPath))
+            {
+                var dic = new System.IO.DirectoryInfo(Application.persistentDataPath);
+                FileSystemInfo[] fileinfo = dic.GetFileSystemInfos();  //返回目录中所有文件和子目录
+                foreach (FileSystemInfo i in fileinfo)
+                {
+                    if (i is DirectoryInfo)            //判断是否文件夹
+                    {
+                        DirectoryInfo subdir = new DirectoryInfo(i.FullName);
+                        subdir.Delete(true);          //删除子目录和文件
+                    }
+                    else
+                    {
+                        File.Delete(i.FullName);      //删除指定文件
+                    }
+                }
+            }
+
+ 42：UGUI下的富文本：
+        <b>text</b>  --粗体
+        <i>text<i>     --斜体
+        <size=10>text</size>   --自定义字号
+        <color=red>text</color> --自定义颜色
+        <color=#a4ffff>text</color> --自定义颜色（16进制）
+        <color=#8B4E4EFF><size=40><i><b>test</b></i></size></color>
+
+ 43: Unity的脚本方法的调用时机：
+        Start 和 OnDestroy 会延迟一帧执行
+
+    
+ 44: 根据配置表名字拷贝并且重命名图片的编辑器扩展
+
+#if UNITY_EDITOR
+    [MenuItem("Excel2Json/CopyFileOfJson")]
+    static void CopyFileOfWordJson()
+    {
+
+        string fromPath = @"D:\qiubin\SVNProject\PHD_Client\词图库";//源路径文件夹
+        string targetPath = @"C:\Users\qiu\Desktop\波力英语工作进程\book2资源\sprite\Unit6\Lesson4";//目标路径文件夹
+
+        if (!Directory.Exists(fromPath) || !Directory.Exists(targetPath))
+        {
+            Debuger.Log("路径不存在，请检查路径:" + "源路径：" + fromPath + " 目标路径：" + targetPath);
+            return;
+        }
+
+        //基本设置
+        var wordList = ConfigManager.Get<ConfigWordLibraryModel>();//配置表
+        string foreachId = "2_6_4";//配置表遍历的id模式（为了缩小遍历范围）
+        string fileSuffix = ".png";//需要复制的文件后缀名
+
+        var fromDic = new DirectoryInfo(fromPath);
+        FileSystemInfo[] fileinfo = fromDic.GetFileSystemInfos();  //返回目录中所有文件和子目录
+        foreach (var i in fileinfo)
+        {
+            if (i is DirectoryInfo || i.Name.Length <= fileSuffix.Length || !i.Name.Substring(i.Name.Length - fileSuffix.Length, fileSuffix.Length).Equals(fileSuffix))
+            {
+                //不是图片不进行操作
+                continue;
+            }
+
+
+            bool isHaveThisFile = false;//同名文件是否存在               
+            foreach (var v in wordList)
+            {
+                //缩小遍历范围
+                if (!v.id.StartsWith(foreachId))
+                {
+                    continue;
+                }
+
+                string fileName = i.Name.Split('.')[0];
+                if (fileName.Equals(v.word))
+                {
+                    Debug.Log("文件 " + i.Name + " 在配置表中存在！开始复制文件·····················");
+                    string copyName = targetPath + "/" + v.id + ".png";
+                    if (File.Exists(copyName))
+                    {
+                        Debug.Log(copyName + "文件已存在，不再进行复制！");
+                    }
+                    else
+                    {
+                        File.Copy(i.FullName, copyName);//复制文件
+                        Debug.Log(copyName + ".png 文件复制成功！");
+                    }
+                    isHaveThisFile = true;
+                    break;
+                }
+            }
+
+            if (!isHaveThisFile)
+            {
+                Debug.LogWarning(i.FullName + "文件在配置表中找不到同名配置，也进行复制！");
+                string copyName = targetPath + "/" + i.Name;
+                File.Copy(i.FullName, copyName);//复制文件
+                Debug.Log(copyName + ".png 文件复制成功！");
+            }
+        }
+
+    }
+#endif
+
+ 45 c#文件基本操作
+        1 c# 中的file和fileinfo，directory和directoryinfo以及filesysteminfo的区别：   
+
+            1-1 file和fileinfo都提供对文件的操作
+                    file类提供静态的方法，file类不能被继承，也不能产生实例，如果只需要使用一次或者次数很少，
+                    那么使用file类会比使用fileinfo效率高，但是file类每次都会花时间对方法进行安全检查，
+                    而fileinfo只是在实例产生时进行一次检查，以后就不会检查，这样的话，如果需要反复对文件操作，
+                    使用fileinfo就会比使用file效率高。
+
+            1-2 同理directory和directoryinfo也是同样的
+                    filesysteminfo提供fileinfo和directoryinfo的共有方法，实现对文件或目录进行操作，
+                    当不确定操作的对象是文件还是目录时使用filesysteminfo就会很方便。
+
+        2 FlleSystemInfo基本介绍：
+            基类：FileSystemInfo 类 ：为 FileInfo 和 DirectoryInfo 对象提供基类。
+            文件类：FileInfo 类：提供用于创建、复制、删除、移动和打开文件的属性和实例方法，并且帮助创建 FileStream 对象。 此类不能被继承。
+            文件夹类：DirectoryInfo 类 公开用于通过目录和子目录进行创建、移动和枚举的实例方法。 此类不能被继承。
+
+            //例子
+            DirectoryInfo fromDic = new DirectoryInfo(fromPath);//定义一个文件夹类（文件夹目录）
+            FileSystemInfo[] fileinfo = fromDic.GetFileSystemInfos();  //返回目录中所有文件和子目录
+
+
+
+    46 新图集管理方式：
+        图集设置：Compression 为压缩格式 - Normal Quality
+
+    
+    47 使用HorLayoutGroup或者VerLayoutGroup时，一旦子物体太多导致形变时，可以给子物体加上Aspect Ratio Fitter组件，
+        使用宽度控制高度或者高度控制宽度的模式，以达到子物体再多也不会产生形变的目的 ！！！
+
+
+    48 transform.Find("");最好加上路径 - 不加路径可能找不到
+
+    49
+        Dotween中的动画不起作用时并且没有任何提示时，很大的可能是该物体不存在，同时dotwenn内部中不会报错！！！！
+
+
+    50 
+        游戏中用dotween控制2d车轮转速：
+         Tweener t1 = BackWheel.DOLocalRotate(-whellRoateTarget, currentWhellRoateTime, RotateMode.FastBeyond360).SetLoops(1, LoopType.Restart).SetEase(Ease.OutCubic);
+        whellRoateTarget 可以设置很大很大，就跟距离一样，然后设置RotateMode为FastBeyond360，表示可以使用超过360旋转的度数！！！
+            // 摘要: 
+    //Rotation mode used with DORotate methods
+    public enum RotateMode
+    {
+        // 摘要: 
+        //     Fastest way that never rotates beyond 360°
+        Fast = 0,
+        //
+        // 摘要: 
+        //     Fastest way that rotates beyond 360°
+        FastBeyond360 = 1,
+        //
+        // 摘要: 
+        //     Adds the given rotation to the transform using world axis and an advanced
+        //     precision mode (like when using transform.Rotate(Space.World)).
+        //     In this mode the end value is is always considered relative
+        WorldAxisAdd = 2,
+        //
+        // 摘要: 
+        //     Adds the given rotation to the transform's local axis (like when rotating
+        //     an object with the "local" switch enabled in Unity's editor or using transform.Rotate(Space.Self)).
+        //     In this mode the end value is is always considered relative
+        LocalAxisAdd = 3,
+    }
+
+
+    51 给物体添加Canvas组件（控制ui层级的）时，需要再添加GraphicRaycaster组件以使得其他触发事件有用（比如点击事件）
+
+宏定义：
+    #if STUDENT_BRANCH - 学生端的宏
+    #elif TEACHER_BRANCH - 教师端的宏    
+

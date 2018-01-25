@@ -1,0 +1,222 @@
+
+lua 学习手册！！！！
+http://www.runoob.com/manual/lua53doc/manual.html#pdf-type
+
+1 
+    type函数的返回值：
+        type (v)    将参数的类型编码为一个字符串返回 
+            函数可能的返回值有 "nil" （一个字符串，而不是 nil 值）， "number"， "string"， "boolean"， "table"， "function"， "thread"， "userdata"。
+    
+    例子：
+        print(type(type(x))) == string !!!!!!很神奇（type得到返回数既然是sring类型的）
+    
+2
+    print([[wqeqeqeqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+    2213123
+    12312312
+    1231231]])
+        lua把[[]]2个方括号内的会看作一块字符串
+    跟c#中的@""操作符一样
+
+3
+    lua中交换赋值的原因！！！！！！！！！！！！
+
+        遇到赋值语句Lua会先计算右边所有的值然后再执行赋值操作，所以我们可以这样进行交换变量的值：
+
+        x, y = y, x                     -- swap 'x' for 'y'
+        a[i], a[j] = a[j], a[i]         -- swap 'a[i]' for 'a[j]'
+
+4
+    应该尽可能的使用局部变量，有两个好处：
+        1. 避免命名冲突。
+        2. 访问局部变量的速度比全局变量更快。
+
+
+5 对表的访问实质：
+
+    对 table 的索引使用方括号 []，Lua 也提供了 . 操作。
+        t[i]
+        t.i                 -- 当索引为字符串类型时的一种简化写法
+        gettable_event(t,i) -- 采用索引访问本质上是一个类似这样的函数调用
+
+
+6 lua中的for循环：
+    for var=exp1,exp2,exp3 do  
+        <执行体>  
+    end  
+    for的三个表达式在循环开始前一次性求值，以后不再进行求值。比如下面的f(x)只会在循环开始前执行一次，其结果用在后面的循环中。
+    function f(x)  
+        print("function")  
+        return x*2   
+    end  
+    for i=1,f(5) do print(i)  
+    end
+    输出：1,2,3,4,5,6，、、、10
+
+    //泛型for循环
+    首先，ipairs 这个迭代器只能遍历所有数组下标的值，这是前提，也是和 pairs 的最根本区别，也就是说如果 ipairs 在迭代过程中是会直接跳过所有手动设定key值的变量。
+特别注意一点，和其他多数语言不同的地方是，迭代的下标是从1开始的。
+
+    例子1：
+        tab = {1,2,a= nil,"d"}
+        for i,v in ipairs(tab) do
+            print(i,v)
+        end
+        //输出：
+            1 1
+            2 2
+            3 d
+        这里是直接跳过了a=nil这个变量
+    
+    例子2：
+        tab = {1,2,a= nil,nil,"d"}
+        for i,v in ipairs(tab) do
+            print(i,v)
+        end
+
+        输出结果为：
+            1  1
+            2  2
+
+        这里会在遇到 nil 的时候直接跳出循环。
+
+    但是pairs可以遍历表中全部key，value ！！！！！！！
+
+7 lua中的repeat 循环 - 类似do...while循环一样
+
+        repeat
+            statements
+        until( condition )
+
+    repeat
+        print("a的值为:", a)
+        a = a + 1
+    until( a > 15 )
+
+        输出：
+            a的值为:    10
+            a的值为:    11
+            a的值为:    12
+            a的值为:    13
+            a的值为:    14
+            a的值为:    15
+
+
+8 lua中的可变参数：
+
+    Lua函数可以接受可变数目的参数，和C语言类似在函数参数列表中使用三点（...) 表示函数有可变的参数。
+    Lua将函数的参数放在一个叫arg的表中，#arg 表示传入参数的个数。
+
+    例子：
+        function average(...)
+            result = 0
+            local arg={...}
+            for i,v in ipairs(arg) do
+                result = result + v
+            end
+            print("总共传入 " .. #arg .. " 个数")
+            return result/#arg
+        end
+
+        print("平均值为",average(10,5,3,4,5,6))
+
+
+9 lua中的乘幂运算符
+    int a = 100^2;
+    print(a); -- 10000.0
+
+10 lua中的运算符等级：
+
+        从高到低的顺序：
+            ^
+            not    - (unary)
+            *      /
+            +      -
+            ..
+            <      >      <=     >=     ~=     ==
+            and
+            or
+
+
+11 lua中的字符串以及字符串的格式化
+    http://www.runoob.com/lua/lua-strings.html
+
+    Lua 提供了 string.format() 函数来生成具有特定格式的字符串, 函数的第一个参数是格式 , 之后是对应格式中每个代号的各种数据。!!!
+
+
+
+12 table中的操作方法：
+    1. 	table.concat (table [, sep [, start [, end]]]):
+            concat是concatenate(连锁, 连接)的缩写. table.concat()函数列出参数中指定table的数组部分从start位置到end位置的所有元素, 
+            元素间以指定的分隔符(sep)隔开。
+
+        例子：
+            table1 = {'first','second','three'};
+            print('连接后的字符串：' ,table.concat(table1));--输出：连接后的字符串：	firstsecondthree
+            print('连接后的字符串：',table.concat(table1,'* '));--连接后的字符串：	first* second* three
+            print('连接后的字符串：',table.concat(table1,'* ',2,3));--连接后的字符串：	second* three
+
+    2 table.insert (table, [pos,] value):
+            在table的数组部分指定位置(pos)插入值为value的一个元素. pos参数可选, 默认为数组部分末尾.
+        
+        例子：
+            table.insert(table1,'four');
+            print('在末尾插入four的值为:',table1[#table1]); --在末尾插入four的值为:	four
+
+            table.insert(table1,2,'Second');--在指定位置插入（结果会将该位置原本的数后移一位）
+            for k,v in pairs(table1) do
+	            print(k,v)
+            end
+       
+        输出：
+            1	first
+            2	Second
+            3	second
+            4	three
+            5	four
+
+    3   table.remove (table [, pos])
+            返回table数组部分位于pos位置的元素. 其后的元素会被前移. pos参数可选, 默认为table长度, 即从最后一个元素删起。
+        
+        例子：
+            table.remove(table1,3);
+            for k,v in pairs(table1) do
+                print(k,v)
+            end
+
+        输出： 
+            1	first
+            2	Second
+            3	three
+            4	four
+
+    4
+        table.sort (table [, comp])
+        对给定的table进行升序排序。
+
+        例子：
+            以下实例演示了 sort() 方法的使用，用于对 Table 进行排序：
+
+fruits = {"banana","orange","apple","grapes"}
+print("排序前")
+for k,v in ipairs(fruits) do
+    print(k,v)
+end
+
+table.sort(fruits)
+print("排序后")
+for k,v in ipairs(fruits) do
+    print(k,v)
+end
+执行以上代码输出结果为：
+
+排序前
+1    banana
+2    orange
+3    apple
+4    grapes
+排序后
+1    apple
+2    banana
+3    grapes
+4    orange

@@ -1,0 +1,434 @@
+
+顶层UI接口：
+1. ComponentPool:MonoBehaviour类：组件池类 - 获取组件的基类，目的是减少获取组件的调用次数
+   int instanceID = go.GetInstanceID();//Returns the instance id of the object.解释是返回物体的id，改写了Object基类，实现应该是在GameObject类中，具体实现在哪？
+
+2 UIBaseInit:ComponentPoor类：所有UI界面的基类 
+    每次Awake时必须执行UIInit方法，将当前物体下所有的需要控制的子物体（tag标记为规定标记）全部存储到字典中
+        UGUISprites
+        UIManager
+        LoadAssetBundleManager
+
+3 UIBaseInitItem:UIBaseInit类 -用于派生界面子对象时候用
+    重写了UI界面基类中虚属性 -InitTag ，基类中即父物体的标记是UIObject，该子类重写为UIObjectItem
+
+
+9 IUUnDestory 接口 - 用来标志当前界面不想被Destory掉，而是取消激活、
+    - 当前项目的关闭都是按照销毁处理的，如果界面不想被销毁则继承该接口，在UI工厂的DeleteUI方法中会对UI界面进行判断是否有该接口再进行确定是销毁还是取消激活
+
+5 IUIFactory UI工厂接口 包括创建和删除方法
+    创建UI :GetUI(object);
+    删除UI：DeleteUI(string);
+
+6 UIBaseFactory：IUIFactory 实现工厂接口的UI工厂抽象类
+        - 重写了父类中的DeleteUI,如果该名字的ui需要继承了IUIUnDestory接口，该ui就不会被Destory掉，而是取消激活，反之是Destory掉，同时从容器中移除。
+            GetComponet可以获取到一个物体的任意组件或者改组件的基类~~~
+        
+        - 增加了一个CreateUI(object perfabName,object scriptName)创建UI的方法
+            创建UI的同时调用UIManger中的方法根据当前屏幕的转向改变UI的转向
+            ui以及ui的唯一标志UIBaseInit类存进字典中
+            最后当委托链不为空时触发委托链执行
+
+
+7 UIPopupFactory脚本 
+
+    - UIPopupName枚举定义 - 定义了所有弹窗UI的名字枚举 - 注意：枚举定义的名字必须和创建的预制体的名字一样
+    - UIPopupFactory：UIBaseFactory - 弹窗界面工厂实现类 - 实现了UI工厂抽象类
+            实现了基类的GetUI的方法，根据所要获取的UI的枚举，调用UI抽象工厂CreateUI方法创建一个UI
+
+
+8 UIStatusFactory脚本 与7 类似
+    - UIStatusName枚举定义 - 定义了所有底层状态界面UI的名字枚举
+    - UIStatusFactory：UIBaseFactory -状态界面工厂实现类
+        同样实现了基类的GetUI方法，与上类似 
+
+
+
+10 IUIOnChanged 接口
+    底层界面跳转监听接口，用于监听底层界面跳转信息
+        void OnBeforeChange(UIStatusName previous, UIStatusName next);//当销毁当前状态UI并创建新状态UI【前】调用！！！
+        void OnAfterChange(UIStatusName previous, UIStatusName next, UIBaseInit nextUI);//当销毁当前状态UI并创建新状态UI【后】调用！！！！
+
+
+4 UIManager
+    Input.deviceOrientation 得到操作系统设备的物理方向
+    
+    //两个Open方法 - 开启状态界面和弹窗界面
+
+        //状态界面UI的打开接口
+        public void Open(UIStatusName nextStatus, params object[] data);
+            //参数1 - 需要打开的状态界面的UI
+            //参数2 - 需要传给打开的状态界面的参数
+            如果下一个界面继承了接收消息的IUIRefresh接口，则将参数2传递给下一个界面，
+                    同时在传参数之前，将参数通过已注册的观察者即实现了IUIOnRefresh接口的OnBeforeRefresh方法传递给所有注册的观察者
+                    在传参数之前，将参数通过已注册的观察者即实现了IUIOnRefresh接口的OnAfterRefreshUI方法传递给所有注册的观察者
+
+        //弹窗界面UI的打开接口
+        public void Open(UIPopupName next, params object[] data);
+            //参数同上
+            同样会在窗口打开成功时将data参数通过该窗口的实现的Refresh方法传入该窗口
+
+    注：    
+    //Open方法是在预制体UITestShowLevelItem（表示每一个关卡信息的预制体）中的UITestShowLevelItem脚本中的单击事件OnClick中调用的，
+        参数是该预制体的父物体UITestShowLevel上的UITestShowLevel脚本中传入的
+
+        - UITestShowLevelItem:UIBaseInitItem 脚本：每一个关卡的Item，用来显示每一个关卡的配置信息并且为该关卡添加相对应的单击事件
+            public void Init(UITestShowLevel parent, ConfigLessonLevelModel model);//Init方法,用来给UITestShowLevel类调用并且初始化当前关卡信息
+
+        - UITestShowLevel : UIBaseInit, IUIRefresh, IOnUIChange, IUIUnDestroy 脚本：挂载在显示所有关卡信息的父预制体上
+                
+                - 同样继承了IUIRefresh接口，即当主页面点击Open游戏按钮时，在第一次时系统会创建该预制体并将窗口参数通过继承并且实现的Refresh方法传入
+                    注意：这里的窗口参数不同游戏关卡的参数（StartGameDataModel类型），这里只是一个简单的string类型
+                        
+                        执行Refresh方法时：
+                            先判断传入的参数是否是"game"，如果是"game"，即表示玩家打开的是游戏关卡，于是通过ConfigManager解析ConfigGameLibraryModel中的关卡配置信息，
+                            将解析出来的每一个关卡信息赋值给一个新创建的UITestShowLevelItem物体上的UITestShowLevelItem脚本信息，同时放在指定父物体下面
+                            注：通过UITestShowLevelItem.Init(this, gameDataModel)初始化每一个游戏关卡信息
+
+                
+                - 继承了IOnUIChange接口，并且在Start中将当前页面注册到了UIManger的观察者链中，因此在UIManger中Open方法中的会执行：
+
+                            每次用Open打开状态页面时：
+                                - 在执行该页面的Refresh方法之前，会将m_observersUIChange观察者链表中的所有对象的OnBeforeChange方法执行一次
+                                - 在执行该页面的Refresh方法之后，会将m_observersUIChange观察者链表中的所有对象的OnAfterChange方法执行一次
+
+                                来看看这两个方法的用途：
+                                        - public void OnBeforeChange(UIStatusName previous, UIStatusName next)；
+                                            参数1：当期窗口id
+                                            参数2：即将打开的窗口的id
+                                        
+                                             执行过程：
+                                                 判断下一个窗口打开是是否是游戏游戏窗口，是的话就先清空整个ScrollView
+                                                     注：原因是因为在该该窗口打开时的出书化Refresh方法中是会重新创建所有的关卡信息放在ScrollView下的
+
+                                        - public void OnAfterChange(UIStatusName previous, UIStatusName next, UIBaseInit nextUI);该方法暂时未用到
+    {
+    }
+
+                        
+        
+        注：该关卡信息显示界面是继承了IUIUnDestory接口的，即表示该窗口在第一次创建之后是不会被释放的，即每次只是取消激活，但是ScrollView下显示的所有的关卡信息都会在上面被释放
+
+
+
+11 IUIRefresh 接口
+     void Refresh(params object[] data);
+     用于UIManger中的Open方法中先判断打开的窗口是否有继承并实现该接口，继承了则调用该方法，传入数据
+     初步理解：data中的数据是StartGameDataModel类型，而且只有一个，即data[0] as StartGameDataModel;
+        
+        StartGameDataModel类：
+            保存当前窗口或者说是小游戏的数据：
+                游戏id，游戏所需的数据类型：DataType，游戏星数，游戏所需数据（List容器），游戏星数，游戏是否需要引导，游戏的难度等级，游戏描述
+                    public class StartGameDataModel
+                    {
+                        public int gameId;
+                        public DataType dataType;
+                        public List<string> dataList;
+                        public int star;
+                        public bool guide;
+                        public string difficulty;
+                        public string describe;
+                    }
+
+                 
+                DataType枚举：游戏所需的数据类型 //TODO 暂时不是很清楚
+                public enum DataType
+                 {
+                     None = 0,
+                     Word = 1,      //单词类型
+                     Ask = 2,        //问句类型 
+                     Say = 3,         //单句类型
+                     Song = 4,      //歌谣类型
+                     Talk = 5,          //对话类型
+                     Pronunciation = 6, //发音类型
+                 }
+
+
+
+12 IUIOnRfresh 接口
+        void OnBeforeRefresh(UIStatusName previous, UIStatusName next, UIBaseInit nextUI);//在上面的IUIRefresh调用前调用
+        void OnAfterRefreshUI(UIStatusName previous, UIStatusName next, UIBaseInit nextUI);//在上面的IUIRefresh调用后调用
+
+13 IUIVertical， IUIAuto 用于判断界面UI的横屏或者竖屏 - 目前项目中暂时未用到
+
+
+
+
+中层接口：
+1 abstract UIBaseLevelGame:UIBaseInit,IUIRefresh 所有关卡-小游戏父物体上的脚本要继承的基类（抽象类）
+
+       - 继承并实现了IUIRefresh接口，这就表明任何继承当前类的物体（即关卡）的小游戏都会在 UIManger中的Open方法中执行 该类实现的 Refresh方法。
+       //TODO 接下来获得了数据会干嘛呢？
+        public void Refresh(params object[] data)
+        {
+            m_startData = data[0] as StartGameDataModel; //可以看到，关卡类传入的都是当前关卡的一些数据 - 存放在StartGameDataModel中
+            SetData(m_startData.dataType, m_startData.dataList); //解析当前关卡的数据包
+            InitStatisticsGameData(); //初始化当前运行关卡的id及时间？
+            StarCount = m_startData.star;//初始化当前运行关卡的通关星星所需数量
+            Refresh();//该Refresh是当前基类定义的一个虚方法，即若子类（即每一个关卡）也需要初始化时就可以实现该方法
+            PlayGame();//该PlayGame是当前基类定义的一个抽象方法，即若子类（即每一个关卡）必须实现的抽象方法！！！！！！
+        }
+
+
+2 public abstract class UIPracticeBase : UIBaseLevelGame 所有练习关卡需要继承的基类（抽象类）
+
+
+起始脚本：    
+    0 UILoadding:UIBaseInit 游戏的加载界面
+
+
+    1 UIWork：UIBaseInit 测试版的主页面脚本，挂载在最高父物体UIRootHorizontal(Clone)下面的UIWork物体上
+        在Start方法中对UITopBar和UITopBarBlack脚本进行了初始化，同时也对各个主界面的窗口进行了打开设置
+         
+            - 游戏库主界面 ：       UIManager.Instance.Open(UIStatusName.UITestShowLevel, "game");
+            - 学堂关卡主界面：      UIManager.Instance.Open(UIStatusName.UITestShowLevel, "lesson");
+            - 练习关卡主界面：      UIManager.Instance.Open(UIStatusName.UITestShowLevel, "practice");
+            - 自定义关卡主界面：    UIManager.Instance.Open(gameUI, gameData);
+
+            -- 可以发现，除了自定义关卡其他类关卡主界面都是共用一个主界面窗口UITestShowLevel，只是传入的数据有所不同
+                    然后在UITestShowLevel主界面的Refresh方法中，根据传入的数据的不同分别将页面控制在一个固定显示的区域（其实是在第一次加载时就将所有关卡数据全部加载进来了）
+
+    2 UIToPar: UIBaseInit, IOnUIChange 游戏主社区的游戏画面控制器（比如返回上一层界面，设置栏，个人服务中心）
+            该界面是独立于主游戏界面的，内含一个Init方法用于主页面脚本UIWork在Start中进行初始化
+
+            //TODO 细节呢？
+    
+    
+    3 UITopBarBlack : UIBaseInit, IUIOnRefresh 游戏关卡内的游戏画面控制器（比如有返回游戏关卡选择按钮，当前关卡名字显示text，当前关卡通关条件及进度（用星星表示），游戏获得星星
+            或者失败没有获得星星的动画轨迹图）
+
+            同样，内含一个Init方法用于主页面脚本UIWork在Start中调用
+            public void Init()
+            {
+                UIManager.Instance.RegisterObserver(this);//将自身注册到UIManger的观察者中？.//TODO  所为何意？
+                UGUIEventListener.Get(BtnBack).onPointerClick = BtnBackClick;
+                gameObject.SetActive(false);//先取消激活自身，因为当前窗口是关卡游戏画面控制器，在游戏主社区中是需要不能显示的
+            }
+
+            注：目前只有UITopBarBlack注册到了UIManger的m_observersUIRefresh观察者链表中，执行之处在于：
+                    每次UIManger打开一个状态页面时（即Open），
+                        - 在执行该页面的Refresh方法之前，会将m_observersUIRefresh观察者链表中的所有对象的OnBeforeRefresh方法执行一次
+                        - 在执行该页面的Refresh方法之后，会将m_observersUIRefresh观察者链表中的所有对象的OnAfterRefreshUI方法执行一次
+                        
+                        意图何在？
+                    
+                    继续往下看：
+                        - public void OnBeforeRefresh(UIStatusName previous, UIStatusName next, UIBaseInit nextUI);
+                                参数1:当前的窗口的名字（也可以说是类型或者id，枚举类型的）
+                                参数2：所要打开的窗口的名字（也可以说是类型或者id，枚举类型的）
+                                参数3：所要打开的窗口的UIBaseInit，（所有的窗口父物体都必须挂载一个继承了该窗口基类的脚本），所以此参数也可以说是传入所要打开的窗口物体
+                                        该参数是通过 m_statusFactory.GetUI(next);得到了，即状态窗口生成工厂中拿到的
+                                
+                                执行过程：
+                                    根据所要打开的窗口类型从ConfigGameLibraryModel获取该窗口，并且根据窗口类型显示相应的关卡进度条（注：目前为止就两种类型，一种是普通关卡模式，
+                                    一种是练习关卡模式（两种模式的游戏进展条是不一样的））同时进行一些游戏关卡控制器的一些基本信息的设置
+
+                                     注： 最重要的是通过第三个参数得到打开关卡总脚本对象，即 
+                                                 m_currentGame = nextUI as UIBaseLevelGame;
+                                                 
+                                            然后再在InitGameEvent方法中为这个关卡总控制脚本注册事件！！！！
+                                                    private void InitGameEvent()
+                                                    {
+                                                        m_currentGame.OnGameRightEvent += AddOneStar;
+                                                        m_currentGame.OnGameWrongEvent += WrongStarFly;
+                                                        m_currentGame.OnUpdateStarCountEvent += (starCount) => { SetStarNum(starCount); };
+                                                        m_currentGame.OnUpdateDelayGameEndEvent += (delay) => { m_delayGameEndTime = delay; };
+                                                        if (m_currentGame.CustomGameEndEvent != null)
+                                                        {
+                                                              OnCompleteAllStarEvent = m_currentGame.CustomGameEndEvent;
+                                                        }
+                                                        else
+                                                        {
+                                                             OnCompleteAllStarEvent = SetAllStarFinish;
+                                                        }
+                                                    }
+
+
+                        -   public void OnAfterRefreshUI(UIStatusName previous, UIStatusName next, UIBaseInit nextUI);
+                                - 参数与上类似
+                                
+                                执行过程：
+                                    - 根据所要打开的窗口类型显示不一样的标题：
+                                        练习模式显示：同步测试
+                                        其他的模式显示：欧美思学堂
+                                    
+                                    - 之后将将当前关卡的dataType类型转换成对应的中文名显示在窗口上 
+
+            
+
+    4 Manger预制体：挂载了全部的Manger   //TODO
+
+//TODO 问题：
+    1 状态界面和弹窗界面 -- 还是处于模糊中 关卡胜利界面属于弹窗界面，游戏中的关卡都是属于状态界面
+    
+    2 配置表类 //一脸懵逼~~~~~ 
+        ConfigLessonLevelModel 关卡模型的配置类
+        ConfigGameLibraryModel：游戏单词模型Model
+
+            public string id;//单词id
+            public string word;//单词的内容
+            public string meaning;//单词的意思
+            public AudioSource PlaySound()  //播放该单词的声音
+            {
+                return AudioManager.Instance.Play(word, false);
+            }
+            ConfigManger 可以加载任何类型的数据Manger！！！！！！！！！！！！！！！！！！
+    
+    3 UIManager中注册的观察者是干嘛用的？ 
+
+    4 UIPracticeBase : UIBaseLevelGame 是干嘛用的？
+    5 UITopBarStarFly 干啥的？
+
+还需学习：
+    1 TMPro插件：
+        TextMeshProUGUI 脚本：代替UGUI的Text，SetText设置text的值
+        TMP_Text？？
+
+
+    2 UnityEngine.EventSystems
+        在需要监听UGUI事件的物体上，挂载UGUIEventListener脚本，同时再挂载需要监听的事件对应的脚本，如：
+             
+             - 单击事件： 在button按钮上挂载UGUIEventOnPointerClick单击事件脚本，然后在代码中通过
+                        UGUIEventListener.Get(button游戏物体/或者该button上的任意一个组件).onPointerClick = AudioButtonClick;
+                        
+                        //所要执行的单击事件 - 参数是PointerEventData类型
+                        private void AudioButtonClick(UnityEngine.EventSystems.PointerEventData arg0);
+
+
+                        PointerEventData类：与指针（鼠标/触摸）事件相关联的事件参数类
+                            如变量中有positon，可以表示当前事件的点击位置
+                            
+
+
+
+
+
+    3 UnityEngine.RuntimeInitializeOnLoadMethodAttribute
+        允许运行时类方法在运行时加载游戏时被初始化，而不需要用户的操作。
+        标记[RuntimeInitializeOnLoadMethod]的方法在游戏加载后被调用。这是在Awake方法被调用之后。
+        public class Main : MonoBehaviour {
+
+                [UnityEngine.RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+                public static void GameMain() //该方法会在整个的场景加载前运行该静态方法
+                {
+                     Debug.Log("Main static function is Start on sceneLoad");
+                }
+
+                RuntimeInitializeLoadType.AfterSceneLoad 是在场景加载完毕后运行该静态方法
+                但是：该静态方法一定是在该场景上任意一个脚本的Awake之前运行的！即该方法是游戏运行时第一个执行的方法，且不用挂载！！！！！
+        }
+
+
+
+
+    4 UnityEngine.SceneManagement.SceneManager 运行时的场景管理 - 系统的
+            - Scene currentScene = SceneManager.GetActiveScene();//获取当前活动的场景
+
+           
+    5 UnityEngine.SceneManagement.Scene 场景类
+        Scene.name 场景名称
+
+    6 DG.Tweening.Tweener DoTweening动画
+            using DG.Tweening;
+            void Start () 
+            {
+                //让TimeScale = 0
+                Time.timeScale = 0;
+        
+                Image image = transform.Find("Image").GetComponent<Image>();
+                //调用DOmove方法来让图片移动
+                Tweener tweener = image.rectTransform.DOMove(Vector3.zero,1f);
+                //设置这个Tween不受Time.scale影响
+                tweener.SetUpdate(true);
+                //设置移动类型
+                tweener.SetEase(Ease.Linear);
+                tweener.onComplete = delegate() {
+                    Debug.Log("移动完毕事件");
+                };
+                image.material.DOFade(0,1f).onComplete = delegate() {
+                    Debug.Log("褪色完毕事件");
+                };
+            }
+
+
+    7 
+        Screen.Height 和Screen.Weight是游戏分辨率的大小！！！！！
+        WorldCamera.pixelWidth和WorldCamera.pixelHeight还是游戏分辨率的大小！！！！
+
+        如何得到相机的那个视口分辨率？？？
+            即游戏场景中的可视区域的大小怎么得到？是不是不用考虑分辨率的大小？而是只考虑这个可视范围的大小
+
+    8
+        Object类实例方法：
+            GetInstanceID方法：Object对象ID
+             基本语法 public int GetInstanceID();
+            功能说明 此方法用来返回Object对象的实例化ID。说明如下：
+            1.每个Object对象的实例、Object子类的实例如GameObject、Component等以及Object子类的子类实例如Transform、RigidBody等再工程中都有唯一的ID(int类型)。
+                并且从程序开始运行到结束，除非对象销毁，否则实例对应的ID都不会改变。
+            2. 从GameObject.CreatePrimitive()或Object.Instantiate()中创建或克隆的每个名字相同的GameObject对象都有唯一的ID，即虽然名字相同，但ID却是不同的。
+                在游戏开发中有时需要克隆大量的物体，而每个物体的生命周期需要单独记录，此时这两种方法很有用。
+
+    9
+        UI.Selectable.interactable = true;//表示按钮可以使用
+
+
+
+    10      
+        Vector2 pointPosition = Camera.main.WorldToScreenPoint(Line.position);//世界坐标转屏幕坐标
+        _camera.ScreenToWorldPoint(dianV);  //屏幕坐标转成世界坐标
+
+
+    11 Unity 2D两种常用判断点击的方法
+        1.Raycast法
+             RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);             
+             if(hit.collider != null)
+             { 
+             　　Debug.Log ("Target Position: " + hit.collider.gameObject.transform.position);
+             　　//and do what you want
+             }
+
+        2.Overlap法
+        Collider2D[] col = Physics2D.OverlapPointAll(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+        
+        if(col.Length > 0)
+        {
+            foreach(Collider2D c in col)
+            {
+                //do what you want
+            }
+        }
+
+    12 
+        public static bool ScreenPointToWorldPointInRectangle(RectTransform rect, Vector2 screenPoint, Camera cam, Vector3 worldPoint);
+            
+            ScreenPointToLocalPointInRectangle	将屏幕空间点转换为矩形平面上的RectTransform的局部空间中的位置。
+            ScreenPointToWorldPointInRectangle	将屏幕空间点转换为位于给定RectTransform平面上的世界空间中的位置。
+                //判断鼠标是否碰到了物体
+                if (CheckMouseToTarget(out targetItem)) 
+                {
+                    //碰到了
+                    Vector2 targetPointPositon = targetItem.GetImageItemPointPositon;//获得目标圈的屏幕位置
+                    
+                // RectTransformUtility.ScreenPointToLocalPointInRectangle(mainCancas.transform as RectTransform, pointPosition, mainCamea, out pointPositon2);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(mainCancas.transform as RectTransform, targetPointPositon, mainCamea, out targetPointPositon);
+
+                // float dis = Vector2.Distance(targetPointPositon, pointPosition);
+                    float dis = Vector2.Distance(targetPointPositon, pointPositon2);//必须将屏幕坐标转换为相同画布下的坐标计算的距离才是对的
+                    Debug.Log(dis);
+                    Line.up = pointPositon2 - targetPointPositon;//设置连线方向
+                    Line.sizeDelta = new Vector2(Line.sizeDelta.x,dis);//设置连线长度
+                }
+
+    13 UGUI 的Grid排序 - TMPro插件自带自己的输入框，很好用
+
+    14 Git 外部比较工具 : Beyond Compare!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    15 SpritesLoad.LoadAtlas(AtlasName.UICommon, MyClassModel.icon);加载任意图集下的图片
+
+
+
+
+
+
+
+

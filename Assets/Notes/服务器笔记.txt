@@ -1,0 +1,128 @@
+1 服务端：返回结果对照表
+        服务器返回1002 = 用户不存在，只有返回0的时候才表示登入成功！
+        
+            ID为空 = 1000,
+            数据为空 = 1001,
+            用户不存在= 1002,
+            不是VIP用户 = 1003,
+            班级不存在 = 1004,
+
+            号码已存在 = 1005,
+            手机号或密码错误 = 1006,
+
+            号码不能为空 = 1007,
+            密码不能为空 = 1008,
+            验证码不能为空 = 1009,
+            验证码不正确 = 1010,
+            验证码已过期 = 1011,
+            验证码发送失败 = 1012,
+
+2 项目中与服务器对接的接口笔记：
+     1: class BaseRequest：MoneBehaviour  请求基类
+
+                public enum UnityEngine.NetworkReachability
+                {
+                    //网络状态的枚举
+                        NotReachable = 0,  //网络不可用的情况
+                        ReachableViaCarrierDataNetwork = 1,//用户使用的是移动网络
+                        ReachableViaLocalAreaNetwork = 2,//用户使用的是wifi
+                }
+                Application.internetReachability 当前游戏的网络状态 类型是NetworkReachability
+
+                    //当网络不可用时              
+                    if (Application.internetReachability== NetworkReachability.NotReachable)              
+                    { 
+                        //Do sth.
+                    }
+
+                    //当用户使用WiFi时  
+                    if (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork)               
+                    { 
+                        //Do sth. 
+                    }                 
+
+                    //当用户使用移动网络时
+                    if (Application.internetReachability == NetworkReachability.ReachableViaCarrierDataNetwork)             
+                    {
+                        //Do sth.               
+                    }
+
+
+3. Uinty 使用UnityWebRequest与服务器进行交互：
+    
+    //检测网络请求url是否正确且可以请求的方法
+    protected bool CheckCanRequest(string url)
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            Debuger.Log("Url Is Null! Please Check!");
+            return false;
+        }
+        if (Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            Debuger.LogWarning("No Internet!! Please Check!");
+            UILoading.End();
+            UIUtility.Tips(Localization.Get("server_request_no_internet"), TipsType.OneButton, "没有信号");
+            return false;
+        }
+        return true;
+    }
+
+    //发送请求的协程
+    protected IEnumerator YieldRequest(UnityWebRequest m_request)
+    {
+        yield return m_request.Send();
+        if (!string.IsNullOrEmpty(m_request.error))
+        {
+            HandleError("", m_request.error);
+        }
+        else
+        {
+            HandleSucc(m_request.downloadHandler);
+        }
+    StopRequest();//请求结束
+    }
+
+    //方法一：参数为服务器地址和内容
+    public void PostRequest(string url,string postData)
+    {
+        if (!CheckCanRequest(url))
+            return;
+        WWWForm form = new WWWForm();
+        form.AddField("d", postData);//将数据保存在WWWForm内
+
+         //使用Post的方式发送数据到服务器
+        UnityWebRequest request = UnityWebRequest.Post(url, form);
+        StartCoroutine(YieldRequest(request));//开始请求
+    }
+
+    //方法二：参数为：服务器地址，文件头名字（类型），文件名字，文件的buye数组，本次请求携带的内容（参数）
+    protected void PostRequest(string url, string fieldName, string fileName, byte[] bytes, string d = "")
+    {
+        if (!CheckCanRequest(url))
+            return;
+        string log = "********Send Request URL Is :" + url;
+        log += ", fieldName : " + fileName;
+        log += ", fileName : " + fileName;
+        log += ", bytes : " + bytes;
+        //Debuger.Log(log);
+        var model = new RequestDataModel()
+        {
+            id = Player.Instance.Id,
+            t = Player.Instance.Token,
+            d = d
+        };
+        string json = JsonUtility.ToJson(model);
+        log += "，d：" + json;
+        Debuger.Log(log);
+        WWWForm form = new WWWForm();
+        form.AddField("d", json);
+        if (bytes != null && fieldName != null)
+        {
+            form.AddBinaryData(fieldName, bytes, fileName);
+        }
+                
+        //使用Post的方式发送数据到服务器
+        UnityWebRequest request = UnityWebRequest.Post(url, form);
+        StartCoroutine(YieldRequest(request));//开始请求
+    }

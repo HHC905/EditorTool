@@ -1,0 +1,33 @@
+1 2d下两个物体的position的距离跟他们的物体大小的单位不一致！！！
+
+                var dis = Vector2.Distance(Mouth.position, bubblePosition)*20;//TODO 距离与实际长度距离不同~~后面解决
+                Debug.Log(dis);
+                Debug.Log(Mouth.sizeDelta.x *0.5f);
+                if (dis >= 0 && dis< Mathf.Abs(Mouth.sizeDelta.x *0.5f - bubbleWordMaxRidus)  && bubble.CurrentWord.Equals(CurrentTrueWord))
+                {}
+                dis算出来的太小，只有0.几。。但是按照他们物体各自的半径来说，他们的距离应该有很大
+
+2 2d物体在脚本中localPositon与在视图面板中的positon不一样~~~~~
+
+
+问题解决：   1 2问题都是因为在2D模式下，主Canvas的RenderMode用的是ScreenSpace - Camera模式：同时Canvas Scaler的像素大小也设置了，
+            此行为会导致Canvas的RectTransfrom的Scale缩小。因此在该Canvas下的所有物体的世界坐标，大小，等都会被相应的缩小该Scale，
+            因此就出现了上面的1问题的dis非常小，原因就是因为2中的positon缩小了，因此dis都缩小了（这些都是世界单位，所以会受影响）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

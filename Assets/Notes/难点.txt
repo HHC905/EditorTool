@@ -1,0 +1,56 @@
+1 excel文件 build json文件
+    http://www.cnblogs.com/zouxiaojia/p/7512841.html
+
+
+
+2 pc端打包：
+    选择每个平台对应的SwitchPlatform来切换当前环境的版本
+    OtherSetting：
+        1 AutoGraphics API for windows 要勾选上
+        2 ApiLevel 选择.net2.0 
+
+
+3 SoruceTree笔记：
+    问题1：本次提交记录不需要或者有问题，怎么撤销该次提交记录？
+        解决方法：
+            1 - 先选择当前分支下该【错误提交记录】的前一个版本（没有问题的一个版本），右键点击”重置当前分支到此次提交”选择【强行合并】，
+                合并完后此时你的本地记录要回滚到了该没有问题的版本。       
+            2 - 在选择该分支下的【最新提交记录】的版本，右键点击“重置当前分支到此次提交”选择【软合并】，合并完后此时你的文件状态就是会呈现出：
+                第一步回滚到的版本的文件，和当前错误提交记录版本的文件差异，如果你的【错误提交记录】下没有什么文件需要保存，就可以直接解决完冲突后
+                直接提交就行了（解决冲突也是使用我的版本解决），如果有文件你需要，那就把那个文件的修改状态直接移除掉，然后上传就行了
+    
+    问题2：本次回滚版本后，前面版本上传的东西还想要怎么办？
+        解决方法：
+            1 - 选中你想要的那个版本的记录，右键选择“遴选”，将该版本所有的提交文件作为新文件拷贝到当前版本
+            2 - 但是前提是当前版本与所要遴选出来的文件不能冲突
+            3 - 还有一个问题就是遴选出来的文件只能直接推送，不能作修改，注意！
+
+    问题3：
+        1分支将2分支的东西合并到当前分支，此时1分支解决冲突时错误了但是又将记录提交了，然后就不能再讲2分支合并过来了，
+        因为此时已经保存了合并记录，第二次合并就不会有效果了，所以，怎么重新合并？
+
+
+4 合并时解决冲突要点：
+    1. 合并后，他人版本就是合并过来的那个分支的版本，我的版本就是当前本地的版本。
+    2. 打开外部合并工具后：他人版本的标记的Remead，我的版本就是Local本地，中间的那个是参照物
+    3. 解决冲突时，可以选择采用左边部分或者采用右边部分解决冲突，也可以直接使用合并工具默认解决冲突的方法，解决完一条后冲突后，
+        需要点击该条冲突的最右边的感叹号，表示已经解决该条冲突，解决完所有的冲突后，在点击右上角的保存，就表示解决完了，然后关闭
+        外部合并工具，等待刷新完成后再解决下一条冲突。
+    4. projectting冲突时，后缀dev表示是omsdel端的设置，omset，表示是教师端的，omses，表示是学生端的，看清楚当前在哪个版本就用哪个的设置！！！
+        版本号冲突采用最新的部分
+
+5 
+    adb install -r D:\qiubin\GitProject\OMS\Tools\BuildChannelApkTool\outputDir\OMS-1.0.2-2017.11.3\OMS-1.0.2-2017.11.3_yingyongbao.apk
+
+6
+    var s = (Avatar.texture as UnityEngine.Texture2D).EncodeToPNG(); unity图片转换成byte数组
+
+
+7 
+    Inno Setup 编译器 用来将PC端的Unity包打成
+
+    D:\qiubin\GitProject\BolyEnglish\Tools\BuildChannelApkToo....apk: 1 file pushed. 6.2 MB/s (73900763 bytes in 11.446s)
+        pkg: /data/local/tmp/BolyEnglish_xiaomi.apk
+
+
+    adb install -r D:\qiubin\GitProject\BolyEnglish\Tools\BuildChannelApkTool\outputDir\BolyEnglish\BolyEnglish_xiaomi.apk
